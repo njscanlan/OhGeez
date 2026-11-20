@@ -30,6 +30,16 @@ That also means nobody can recover it for you. Use **Plan > Your data > Save a b
 
 It works offline once it has been opened.
 
+## Oh Geez for Claude
+
+There is also a free Claude skill for the appointments side: getting ready for SLP, OT, PT, dietitian, GI and other visits, decoding swallow studies and therapy reports, and turning homework into a daily checklist. It can read and update an Oh Geez backup file. See [plugin/README.md](plugin/README.md).
+
+In Claude Code:
+
+```
+/plugin install oh-geez --marketplace njscanlan/OhGeez
+```
+
 ## Not medical advice
 
 Oh Geez organizes what your care team prescribes. It never calculates or changes feed amounts, rates or textures. Always check changes with your child's care team.
