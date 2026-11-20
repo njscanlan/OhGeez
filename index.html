@@ -1,0 +1,742 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="description" content="Oh Geez helps parents of tube-fed kids track feeds, water, daily care and supplies. Free, open source, and everything stays on your phone.">
+<meta name="theme-color" content="#1E7366">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="Oh Geez">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="icon" href="icon.svg" type="image/svg+xml">
+<link rel="apple-touch-icon" href="apple-touch-icon.png">
+<style>:root{color-scheme:light;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}body{margin:0;font:14px/1.5 system-ui,-apple-system,"Segoe UI",sans-serif}img{max-width:100%}[hidden]{display:none!important}</style>
+<title>Oh Geez</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Nunito:wght@600;800;900&family=Inter:wght@400;500;600&display=swap">
+<style>
+/* Layout: one calm phone column, sticky header, bottom tab bar; cards only where something needs a tap. */
+:root{
+  --bg:#EEF4F2; --surface:#FFFFFF; --ink:#16302B; --muted:#5A6E69; --line:#D5E2DE;
+  --teal:#1E7366; --teal-soft:#D9EEE9; --sun:#F2A93B; --sun-soft:#FDF0D8;
+  --ok:#2E8B57; --warn:#C27A0E; --bad:#C2452D; --bad-soft:#FBE3DD;
+  --display:"Nunito",ui-rounded,"Segoe UI",system-ui,sans-serif;
+  --body:"Inter",system-ui,-apple-system,"Segoe UI",sans-serif;
+}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){
+  --bg:#0F1A18; --surface:#172623; --ink:#E4EFEC; --muted:#9AB0AA; --line:#2A3D39;
+  --teal:#5CC2B0; --teal-soft:#1E3A35; --sun:#F5B858; --sun-soft:#3A2E17;
+  --ok:#5FC28A; --warn:#E5A743; --bad:#F07F68; --bad-soft:#3E211B; color-scheme:dark}}
+:root[data-theme="dark"]{
+  --bg:#0F1A18; --surface:#172623; --ink:#E4EFEC; --muted:#9AB0AA; --line:#2A3D39;
+  --teal:#5CC2B0; --teal-soft:#1E3A35; --sun:#F5B858; --sun-soft:#3A2E17;
+  --ok:#5FC28A; --warn:#E5A743; --bad:#F07F68; --bad-soft:#3E211B; color-scheme:dark}
+*{box-sizing:border-box}
+body{background:var(--bg);color:var(--ink);font-family:var(--body);font-size:15px;line-height:1.5}
+body::before{content:"";position:fixed;inset:0 0 auto;height:env(safe-area-inset-top,0px);z-index:10;background:var(--bg)}
+.wrap{max-width:560px;margin:0 auto;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));padding-block:0 110px}
+header{position:sticky;top:env(safe-area-inset-top,0px);z-index:5;background:var(--bg);padding-block:14px 10px;display:flex;align-items:baseline;justify-content:space-between;gap:12px}
+.brand{font-family:var(--display);font-weight:900;font-size:26px;letter-spacing:-.01em}
+.brand span{color:var(--sun)}
+.who{font-size:13px;color:var(--muted)}
+h2{font-family:var(--display);font-weight:800;font-size:20px;margin:22px 0 10px;text-wrap:balance}
+h3{font-family:var(--display);font-weight:800;font-size:16px;margin:0}
+.eyebrow{font-size:11px;letter-spacing:.08em;text-transform:uppercase;color:var(--muted);font-weight:600}
+.num{font-variant-numeric:tabular-nums}
+.muted{color:var(--muted)}
+.small{font-size:13px}
+.stack{display:flex;flex-direction:column;gap:10px}
+.row{display:flex;gap:10px;align-items:center;flex-wrap:wrap}
+.card{background:var(--surface);border:1px solid var(--line);border-radius:14px;padding:14px}
+.banner{background:var(--sun-soft);border-radius:12px;padding:10px 12px;font-size:13px}
+button{font:inherit;cursor:pointer;border-radius:10px;border:1px solid var(--line);background:var(--surface);color:var(--ink);padding:9px 12px;min-height:40px}
+button:disabled{opacity:.45;cursor:not-allowed}
+button:focus-visible,input:focus-visible,select:focus-visible,textarea:focus-visible{outline:3px solid var(--sun);outline-offset:2px}
+.btn-primary{background:var(--teal);border-color:var(--teal);color:var(--surface);font-weight:600}
+.btn-ghost{background:transparent}
+input,select,textarea{font:inherit;color:var(--ink);background:var(--bg);border:1px solid var(--line);border-radius:10px;padding:9px 10px;width:100%;min-width:0}
+textarea{min-height:64px;resize:vertical}
+label{display:flex;flex-direction:column;gap:4px;font-size:13px;color:var(--muted);min-width:0}
+.grid2{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+
+/* Today progress */
+.hero{display:grid;grid-template-columns:auto 1fr;gap:16px;align-items:center}
+.ring{width:96px;height:96px}
+.big{font-family:var(--display);font-weight:900;font-size:30px;line-height:1}
+.feed{display:grid;grid-template-columns:44px 1fr auto;gap:12px;align-items:center}
+.dot{width:44px;height:44px;border-radius:50%;display:grid;place-items:center;font-family:var(--display);font-weight:900;background:var(--teal-soft);color:var(--teal)}
+.feed.done .dot{background:var(--teal);color:var(--surface)}
+.feed-body{min-width:0}
+.chips{display:flex;gap:8px;flex-wrap:wrap}
+.chip{border-radius:999px;padding:7px 12px;min-height:36px;font-size:14px}
+.chip[aria-pressed="true"]{background:var(--teal);border-color:var(--teal);color:var(--surface)}
+.quick{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}
+.quick button{display:flex;flex-direction:column;align-items:center;gap:2px;padding:10px 6px;font-size:13px}
+.quick b{font-family:var(--display);font-size:18px}
+.log{display:grid;grid-template-columns:62px 1fr auto;gap:10px;align-items:start;padding:8px 0;border-top:1px solid var(--line);font-size:14px}
+.log:first-child{border-top:0}
+.log .x{min-height:30px;padding:2px 8px;border:0;background:transparent;color:var(--muted)}
+
+/* Supplies */
+.sup{display:flex;flex-direction:column;gap:8px}
+.sup-top{display:flex;justify-content:space-between;gap:10px;align-items:flex-start}
+.pill{font-size:12px;font-weight:600;border-radius:999px;padding:3px 10px;white-space:nowrap}
+.pill.ok{background:var(--teal-soft);color:var(--ok)}
+.pill.soon{background:var(--sun-soft);color:var(--warn)}
+.pill.now{background:var(--bad-soft);color:var(--bad)}
+.bar{height:8px;border-radius:99px;background:var(--line);overflow:hidden}
+.bar i{display:block;height:100%;background:var(--teal)}
+.bar.soon i{background:var(--sun)} .bar.now i{background:var(--bad)}
+.stepper{display:flex;align-items:center;gap:6px}
+.stepper button{width:40px;padding:0}
+
+/* Brief */
+.brief section{padding:12px 0;border-top:1px solid var(--line)}
+.brief section:first-child{border-top:0;padding-top:0}
+.brief ol,.brief ul{margin:6px 0 0;padding-left:20px}
+.brief li{margin:4px 0}
+dl{margin:6px 0 0;display:grid;grid-template-columns:auto 1fr;gap:4px 12px;font-size:14px}
+dt{color:var(--muted)} dd{margin:0;min-width:0}
+details{border-top:1px solid var(--line);padding:8px 0}
+details:first-of-type{border-top:0}
+summary{cursor:pointer;font-weight:600}
+
+/* Tab bar */
+nav{position:fixed;left:0;right:0;bottom:0;z-index:6;background:var(--surface);border-top:1px solid var(--line);padding-bottom:env(safe-area-inset-bottom,0px);padding-left:max(8px,env(safe-area-inset-left,0px));padding-right:max(8px,env(safe-area-inset-right,0px))}
+nav .tabs{max-width:560px;margin:0 auto;display:grid;grid-template-columns:repeat(4,1fr)}
+nav button{border:0;background:transparent;border-radius:0;display:flex;flex-direction:column;align-items:center;gap:2px;font-size:12px;color:var(--muted);padding:8px 4px;min-height:56px}
+nav button svg{width:22px;height:22px}
+nav button[aria-current="page"]{color:var(--teal);font-weight:600}
+.daynav{display:grid;grid-template-columns:44px 1fr 44px;align-items:center;gap:8px;margin-top:14px}
+.daynav > button{font-size:24px;padding:0;line-height:1}
+.linkish{border:0;background:none;color:var(--teal);padding:0;min-height:0;font-weight:600;text-decoration:underline}
+.strip{display:grid;grid-template-columns:repeat(7,1fr);gap:6px;margin-top:10px}
+.dayc{display:flex;flex-direction:column;align-items:center;gap:1px;padding:6px 2px;min-height:0;font-size:11px;color:var(--muted)}
+.dayc b{font-size:15px;color:var(--ink)} .dayc i{font-style:normal;font-size:11px}
+.dayc i.ok{color:var(--ok)} .dayc i.mid{color:var(--warn)} .dayc i.over{color:var(--warn)}
+.dayc.on{background:var(--teal);border-color:var(--teal)} .dayc.on, .dayc.on b, .dayc.on i{color:var(--surface)}
+.cd{display:flex;flex-direction:column;gap:8px;border-width:2px;border-color:var(--teal)}
+.cd.soon{border-color:var(--sun);background:var(--sun-soft)} .cd.now{border-color:var(--bad);background:var(--bad-soft)}
+.cd-row{display:flex;align-items:baseline;gap:10px;flex-wrap:wrap}
+.cd-big{font-family:var(--display);font-weight:900;font-size:44px;line-height:1;color:var(--teal)}
+.cd.soon .cd-big{color:var(--warn)} .cd.now .cd-big{color:var(--bad)}
+.cd-sub{color:var(--muted);font-weight:600}
+.cd-mini{display:flex;flex-direction:column;align-items:flex-start;gap:2px;width:100%;text-align:left;border:0;margin:10px 0;color:var(--ink)}
+.cd-mini.now{background:var(--bad-soft)}
+.welcome{border:2px solid var(--teal);margin-top:14px}
+.btnlike{display:inline-flex;align-items:center;font:inherit;font-size:15px;color:var(--ink);cursor:pointer;border-radius:10px;border:1px solid var(--line);background:var(--surface);padding:9px 12px;min-height:40px}
+select{font:inherit;color:var(--ink);background:var(--bg);border:1px solid var(--line);border-radius:10px;padding:9px 10px;width:100%}
+.toast{position:fixed;left:50%;transform:translateX(-50%);bottom:calc(76px + env(safe-area-inset-bottom,0px));background:var(--ink);color:var(--bg);padding:8px 14px;border-radius:999px;font-size:14px;z-index:9}
+.guard{font-size:12px;color:var(--muted);border-left:3px solid var(--sun);padding-left:10px}
+@media (prefers-reduced-motion:no-preference){.ring circle{transition:stroke-dashoffset .5s ease}}
+</style>
+
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <div class="brand">Oh Geez<span>.</span></div>
+    <div class="who" id="who">Feeds and supplies, kept on this phone</div>
+  </header>
+  <div id="notice" class="banner" hidden></div>
+  <main id="view"></main>
+</div>
+
+<nav aria-label="Sections"><div class="tabs">
+  <button data-tab="today" aria-current="page"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></svg>Today</button>
+  <button data-tab="supplies"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 7l9-4 9 4v10l-9 4-9-4z"/><path d="M3 7l9 4 9-4M12 11v10"/></svg>Supplies</button>
+  <button data-tab="brief"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 3h9l4 4v14H6z"/><path d="M9 12h7M9 16h7M9 8h4"/></svg>Brief</button>
+  <button data-tab="plan"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 6h16M4 12h16M4 18h10"/></svg>Plan</button>
+</div></nav>
+<div id="toast" class="toast" hidden role="status"></div>
+
+<script>
+const S = { tab:"today", plan:null, brief:null, supplies:{}, logs:[], loaded:false, db:null, me:"", open:null };
+const SUP_ORDER = ["bags","extsets","syringes","syringe10","syringe30","gentlease","compleat"];
+const $ = s => document.querySelector(s);
+const esc = v => String(v ?? "").replace(/[&<>"']/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
+const dayKey = (d=new Date()) => d.getFullYear()+"-"+String(d.getMonth()+1).padStart(2,"0")+"-"+String(d.getDate()).padStart(2,"0");
+const fmtTime = ts => new Date(ts).toLocaleTimeString([], {hour:"numeric", minute:"2-digit"});
+const fmtDate = d => d.toLocaleDateString([], {weekday:"short", month:"short", day:"numeric"});
+const hhmm = ts => { const d=new Date(ts); return String(d.getHours()).padStart(2,"0")+":"+String(d.getMinutes()).padStart(2,"0"); };
+const tsFrom = (base, t) => { const d=new Date(base); const m=/^(\d{1,2}):(\d{2})/.exec(t||""); if(m) d.setHours(+m[1], +m[2], 0, 0); return d.getTime(); };
+const UNITS=["oz","tsp","tbsp","pieces"];
+const fmtOz = n => (Math.round(n*100)/100).toString();
+function foodForm(key,d){
+  const names=[...new Set(S.logs.filter(l=>(l.type==="food"||l.type==="oral")&&l.food).map(l=>l.food))].slice(0,30);
+  return `<div class="stack" style="margin-top:4px">
+    <label for="fname">Food<input id="fname" list="foodlist" value="${esc(d.food||"")}" placeholder="e.g. Level 4 sweet potato purée, puffs, yogurt melts"></label>
+    <datalist id="foodlist">${names.map(n=>`<option value="${esc(n)}">`).join("")}</datalist>
+    <div class="grid2"><label for="famt">Amount<input id="famt" type="number" step="0.05" inputmode="decimal" value="${esc(d.amount??"")}" placeholder="0.5"></label>
+      <label for="ftime2">Time<input id="ftime2" type="time" value="${hhmm(d.ts||nowOnDay())}"></label></div>
+    <div class="chips" id="funit">${UNITS.map(u=>`<button class="chip" aria-pressed="${u===(d.unit||"oz")}" data-val="${u}">${u}</button>`).join("")}</div>
+    <div><div class="eyebrow" style="margin-bottom:6px">How did she do</div><div class="chips" id="fhow">
+      ${["Great","Okay","Rough"].map(h=>`<button class="chip" aria-pressed="${h===(d.how||"Great")}" data-val="${h}">${h}</button>`).join("")}</div></div>
+    <label for="fnote2">Note (optional)<input id="fnote2" value="${esc(d.note||"")}" placeholder="Coughing, pocketing food, loved it..."></label>
+    <div class="row"><button class="btn-primary" data-act="savefood" data-key="${esc(key)}">Save food</button>
+      ${key.startsWith("edit:")?`<button class="btn-ghost" data-act="undo" data-id="${esc(key.slice(5))}">Remove</button>`:""}</div></div>`;
+}
+function viewKey(){ return S.viewDay || dayKey(); }
+function keyToDate(k){ const [y,m,d]=k.split("-").map(Number); return new Date(y,m-1,d); }
+function nowOnDay(){ if(!S.viewDay || S.viewDay===dayKey()) return Date.now(); const d=keyToDate(S.viewDay), n=new Date(); d.setHours(n.getHours(), n.getMinutes(), 0, 0); return d.getTime(); }
+const addDays = (d,n) => { const x=new Date(d); x.setDate(x.getDate()+n); return x; };
+
+function toast(msg){ const t=$("#toast"); t.textContent=msg; t.hidden=false; clearTimeout(toast.t); toast.t=setTimeout(()=>t.hidden=true,1800); }
+
+/* ---------- data: saved only on this device ---------- */
+const LS_KEY="ohgeez:v1";
+const LocalDB = (()=>{
+  let docs={};
+  try{ docs=JSON.parse(localStorage.getItem(LS_KEY)||"{}")||{}; }catch(e){ docs={}; S.storageBroken=true; }
+  const subs=new Set();
+  const clone=d=>JSON.parse(JSON.stringify(d));
+  const persist=()=>{ try{ localStorage.setItem(LS_KEY, JSON.stringify(docs)); }catch(e){ toast("Couldn't save on this device. Storage may be full or blocked."); throw e; } };
+  const emit=()=>subs.forEach(f=>{ try{ f(); }catch(e){ console.error(e); } });
+  const query=(coll, ord)=>{ let ds=Object.keys(docs).filter(k=>k.startsWith(coll+"/")&&k.split("/").length===2).map(k=>({id:k.slice(coll.length+1), data:()=>docs[k]}));
+    if(ord){ const [f,dir]=ord; ds.sort((a,b)=>{ const x=a.data()[f], y=b.data()[f]; return (x<y?-1:x>y?1:0)*(dir==="desc"?-1:1); }); } return {docs:ds}; };
+  return {
+    doc(path){ return {
+      onSnapshot(cb){ const f=()=>cb({exists: path in docs, data:()=>docs[path]}); subs.add(f); setTimeout(f,0); return ()=>subs.delete(f); },
+      async set(d){ docs[path]=clone(d); persist(); emit(); },
+      async update(f){ docs[path]={...(docs[path]||{}), ...clone(f)}; persist(); emit(); },
+      async delete(){ delete docs[path]; persist(); emit(); } }; },
+    collection(name){ let ord=null; const q={
+      orderBy(f,dir){ ord=[f,dir]; return q; }, limit(){ return q; },
+      onSnapshot(cb){ const f=()=>cb(query(name,ord)); subs.add(f); setTimeout(f,0); return ()=>subs.delete(f); },
+      async add(d){ const id=Date.now().toString(36)+Math.random().toString(36).slice(2,8); docs[name+"/"+id]=clone(d); persist(); emit(); return {id}; } }; return q; },
+    all(){ return clone(docs); },
+    replaceAll(nd){ docs=clone(nd); persist(); emit(); }
+  };
+})();
+async function boot(){
+  render();
+  if(S.storageBroken) showNotice("This browser is blocking storage, so entries won't be kept. Try Safari or Chrome outside of private browsing.");
+  try{ if(navigator.storage && navigator.storage.persist) navigator.storage.persist(); }catch(e){}
+  const db = LocalDB; S.db = db;
+  let got = 0; const done = () => { if(++got>=4){ S.loaded=true; render(); } };
+  db.doc("app/settings").onSnapshot(s => { S.settings = s.exists ? s.data() : {}; S.me = S.settings.caregiverName || ""; done.t ? render() : (done.t=1, done()); });
+  db.doc("app/plan").onSnapshot(s => { S.plan = s.exists ? s.data() : null; done.p ? render() : (done.p=1, done()); });
+  db.doc("app/brief").onSnapshot(s => { S.brief = s.exists ? s.data() : null; done.b ? render() : (done.b=1, done()); });
+  db.collection("orders").orderBy("date","desc").onSnapshot(q => { S.orders = q.docs.map(d=>({id:d.id, ...d.data()})); render(); });
+  db.collection("supplies").onSnapshot(q => { S.supplies={}; q.docs.forEach(d=>S.supplies[d.id]={...d.data(), id:d.id}); done.s ? render() : (done.s=1, done()); });
+  db.collection("logs").orderBy("ts","desc").onSnapshot(q => { S.logs = q.docs.map(d=>({id:d.id, ...d.data()})); render(); });
+  if("serviceWorker" in navigator && location.protocol==="https:"){ try{ navigator.serviceWorker.register("sw.js"); }catch(e){} }
+}
+function showNotice(m){ const n=$("#notice"); n.innerHTML=m; n.hidden=false; }
+function hideNotice(){ $("#notice").hidden=true; }
+
+async function addLog(entry){
+  const e = { ts: Date.now(), by: S.me || "", ...entry }; e.day = dayKey(new Date(e.ts));
+  if(!S.db){ S.logs.unshift({id:"local"+e.ts, ...e}); render(); toast("Logged (not saved)"); return; }
+  try{ await S.db.collection("logs").add(e); toast("Logged"); }catch(x){ toast("Couldn't save. Try again."); }
+}
+async function updateLog(id, fields){
+  if(fields.ts) fields.day = dayKey(new Date(fields.ts));
+  if(!S.db){ const l=S.logs.find(x=>x.id===id); if(l) Object.assign(l,fields); render(); return; }
+  try{ await S.db.doc("logs/"+id).update(fields); toast("Updated"); }catch(x){ toast("Couldn't update. Try again."); }
+}
+async function delLog(id){
+  if(!S.db){ S.logs = S.logs.filter(l=>l.id!==id); render(); return; }
+  try{ await S.db.doc("logs/"+id).delete(); toast("Removed"); }catch(x){ toast("Couldn't remove"); }
+}
+async function saveDoc(path, data, msg){
+  if(!S.db){ toast("Saving is off in this view"); return; }
+  const clean={...data}; if(path.startsWith("supplies/")) delete clean.id;
+  try{ await S.db.doc(path).set(clean); if(msg) toast(msg); }catch(x){ toast("Couldn't save. Try again."); }
+}
+
+/* ---------- derived ---------- */
+const plan = () => S.plan || { feedsPerDay:3, volumeMl:0, rateMlHr:0, waterMl:0, feedLabels:["Morning","Midday","Evening"] };
+const cfg = () => S.settings || {};
+const kid = () => (cfg().childName||"").trim();
+const kidPoss = () => kid() ? kid()+"'s" : "Your child's";
+const sup = () => ({ name:(cfg().supplierName||"").trim()||"your supplier", phone:(cfg().supplierPhone||"").trim() });
+const leadDays = () => Math.max(0, Number(cfg().leadDays ?? 7));
+const mixOptions = () => { const m=(plan().mixOptions||[]).filter(Boolean); return m.length ? m.concat(m.includes("Other")?[]:["Other"]) : ["Formula","Other"]; };
+const DEFAULT_TERMS = [["G-tube","A feeding tube placed through the belly straight into the stomach."],["NG tube","A thin tube that goes through the nose into the stomach."],["MIC-KEY button","A low-profile G-tube that sits flat on the skin. An extension set clicks on for each feed."],["Extension set","The short tube that connects the button to the feeding bag or syringe."],["ENFit","A connector standard for feeding tubes so they can't be hooked up to IV lines by mistake."],["Pump rate (mL/hr)","How fast the pump delivers formula. For example, at 330 mL/hr a 240 mL feed takes about 44 minutes."],["Bolus feed","A feed given over a short time, by syringe or pump, instead of slowly over hours."],["Flush","Pushing water through the tube to keep it clear and add hydration."],["Granulation tissue","Pink or red, moist, bumpy tissue that can grow around the tube site. Common, but it can bleed or leak."],["IDDSI levels","The scale for food and drink textures, from 0 (thin liquids) to 7 (regular food). Level 4 is a smooth purée."],["Dysphagia","Difficulty swallowing safely."],["Aspiration","When food or liquid goes below the vocal cords into the airway instead of the esophagus."],["Swallow study","An X-ray video of swallowing (VFSS) that shows where food and liquid go."],["kcal/mL","Calories per milliliter. A 1.2 kcal/mL formula has 1.2 calories in each mL."]];
+const DEFAULT_BRIEF = { patient:[], next:[], known:[], terms:DEFAULT_TERMS };
+function todayLogs(){ const k=viewKey(); return S.logs.filter(l=>l.day===k); }
+function careRule(t){ const s=String(t); const mx=s.match(/max(?:imum)?\s*(\d+)/i), mn=s.match(/(?:at least|min(?:imum)?)\s*(\d+)/i);
+  return { name:s.replace(/\s*\((?:[^)]*?(?:max|at least|min|as needed)[^)]*)\)\s*$/i,"").trim()||s, max:mx?+mx[1]:0, min:mn?+mn[1]:0 }; }
+function feedMinutes(p){ return p.rateMlHr ? Math.round(p.volumeMl/p.rateMlHr*60) : 0; }
+function nextOrder(){
+  const all=Object.keys(S.supplies).map(id=>({id, s:S.supplies[id], st:supplyState(S.supplies[id])}));
+  const needs=all.filter(x=>x.s.needNow).map(x=>x.s.name);
+  const list=all.filter(x=>isFinite(x.st.daysLeft)&&!x.s.needNow);
+  if(!list.length) return needs.length ? { needs, daysToOrder:0, state:"now", also:[], first:null } : null;
+  list.sort((a,b)=>a.st.daysLeft-b.st.daysLeft);
+  const first=list[0], daysToOrder=Math.floor(first.st.daysLeft-leadDays()), orderBy=addDays(new Date(), daysToOrder), runOut=addDays(new Date(), Math.floor(first.st.daysLeft));
+  const also=list.slice(1).filter(x=>x.st.daysLeft-leadDays() <= daysToOrder+10).map(x=>x.s.name);
+  const state = daysToOrder<=0 ? "now" : daysToOrder<=3 ? "soon" : "ok";
+  return { first, daysToOrder, orderBy, runOut, also, state: needs.length?"now":state, needs };
+}
+function countdownCard(compact){
+  const n=nextOrder(); if(!n) return "";
+  if(n.needs.length){
+    if(compact) return `<button class="banner cd-mini now" data-act="gotosupplies"><b>Order from ${esc(sup().name)} now</b><span class="small">You need: ${n.needs.map(esc).join(", ")}. Tap to see the list.</span></button>`;
+    return `<div class="card cd now"><div class="eyebrow">Next order</div>
+      <div class="cd-row"><div class="cd-big">Order now</div></div>
+      <div class="small"><b>You need:</b> ${n.needs.map(esc).join(", ")}</div>
+      ${n.first?`<div class="small">While you're on the phone, consider adding: ${[n.first.s.name,...n.also].map(esc).join(", ")}. Otherwise the next order is due by ${fmtDate(n.orderBy)} (${esc(n.first.s.name)}).</div>`:""}
+      <div class="small muted">${leadDays()?`Orders are timed ${leadDays()} days before you run out, so shipping has time to arrive.`:""}</div>
+      ${sup().phone?`<div class="row"><span class="num" style="font-weight:700;user-select:all">${esc(sup().phone)}</span>
+        <button class="small" data-act="copy" data-text="${esc(sup().phone)}">Copy number</button>
+        <button class="small" data-act="copyorder">Copy reorder list</button></div>`:`<div class="row"><button class="small" data-act="copyorder">Copy reorder list</button></div>`}</div>`;
+  }
+  const big = n.daysToOrder<=0 ? "Order today" : n.daysToOrder===1 ? "1 day" : n.daysToOrder+" days";
+  const head = n.daysToOrder<=0 ? (n.daysToOrder<0?`Order was due ${fmtDate(n.orderBy)}`:"Order is due") : "until your next order from "+sup().name;
+  if(compact) return n.state==="ok" ? "" : `<button class="banner cd-mini ${n.state}" data-act="gotosupplies"><b>${n.daysToOrder<=0?"Time to reorder from "+sup().name:"Reorder from "+sup().name+" in "+big}</b><span class="small">${esc(n.first.s.name)} run out around ${fmtDate(n.runOut)}. Tap to see the list.</span></button>`;
+  return `<div class="card cd ${n.state}">
+    <div class="eyebrow">Next order</div>
+    <div class="cd-row"><div class="cd-big num">${big}</div><div class="small cd-sub">${head}</div></div>
+    <div class="small">Order by <b>${fmtDate(n.orderBy)}</b>. ${esc(n.first.s.name)} will run out around ${fmtDate(n.runOut)} (${Math.floor(n.first.st.est)} left).</div>
+    ${n.also.length?`<div class="small muted">Add to the same order: ${n.also.map(esc).join(", ")}</div>`:""}
+    <div class="small muted">${leadDays()?`Orders are timed ${leadDays()} days before you run out, so shipping has time to arrive.`:""}</div>
+    ${sup().phone?`<div class="row"><span class="num" style="font-weight:700;user-select:all">${esc(sup().phone)}</span>
+        <button class="small" data-act="copy" data-text="${esc(sup().phone)}">Copy number</button>
+        <button class="small" data-act="copyorder">Copy reorder list</button></div>`:`<div class="row"><button class="small" data-act="copyorder">Copy reorder list</button></div>`}
+  </div>`;
+}
+function feedShare(f, product){ const mix = f.mix || plan().defaultMix || mixOptions()[0]; if(!mix.includes(product)) return 0; return mix.includes("+") ? 0.5 : 1; }
+function feedUse(s, fromTs, toTs){
+  const fs = S.logs.filter(l=>l.type==="feed" && l.ts>=fromTs && l.ts<=toTs);
+  const ml = fs.reduce((a,f)=>a+(Number(f.amount)||0)*feedShare(f, s.product),0);
+  return { units: s.mlPerUnit ? ml/s.mlPerUnit : 0, days: new Set(fs.map(f=>f.day)).size };
+}
+function supplyState(s){
+  let est, rate;
+  if(s.track==="open"){
+    est = Math.max(0, Number(s.counted)||0);
+    const opens = S.logs.filter(l=>l.type==="open" && l.supply===s.id && l.ts>=Date.now()-28*86400000);
+    const span = opens.length ? Math.max(7, (Date.now()-Math.min(...opens.map(o=>o.ts)))/86400000) : 0;
+    rate = opens.length ? opens.length/span : 0;
+  } else if(s.track==="feeds"){
+    const since = s.countedAt ? new Date(s.countedAt).getTime() : 0;
+    est = Math.max(0, (Number(s.counted)||0) - feedUse(s, since, Date.now()).units);
+    const wk = feedUse(s, Date.now()-7*86400000, Date.now());
+    rate = wk.days ? wk.units/wk.days : 0;
+  } else {
+    const daysSince = s.countedAt ? (Date.now()-new Date(s.countedAt).getTime())/86400000 : 0;
+    est = Math.max(0, (Number(s.counted)||0) - (Number(s.perDay)||0)*daysSince);
+    rate = Number(s.perDay)||0;
+  }
+  const daysLeft = rate ? est/rate : Infinity;
+  const lead = leadDays();
+  const reorderBy = isFinite(daysLeft) ? addDays(new Date(), Math.floor(daysLeft - lead)) : null;
+  const status = s.needNow ? "now" : !isFinite(daysLeft) ? "ok" : daysLeft <= lead ? "now" : daysLeft <= lead + 5 ? "soon" : "ok";
+  return { est, daysLeft, reorderBy, status, rate };
+}
+
+/* ---------- views ---------- */
+function render(){
+  const w=$("#who"); if(w) w.textContent = kid() ? kidPoss()+" feeds and supplies" : "Feeds and supplies, kept on this phone";
+  document.querySelectorAll("nav button").forEach(b=>b.setAttribute("aria-current", b.dataset.tab===S.tab ? "page" : "false"));
+  const v = $("#view");
+  if(S.tab==="today") v.innerHTML = viewToday();
+  if(S.tab==="supplies") v.innerHTML = viewSupplies();
+  if(S.tab==="brief") v.innerHTML = viewBrief();
+  if(S.tab==="plan") v.innerHTML = viewPlan();
+}
+
+function viewToday(){
+  const p = plan(), logs = todayLogs();
+  const feeds = logs.filter(l=>l.type==="feed");
+  const goal = p.feedsPerDay * p.volumeMl;
+  const got = feeds.reduce((a,l)=>a+(Number(l.amount)||0),0);
+  const ratio = goal ? got/goal : 0, pct = Math.min(1, ratio), over = Math.min(1, Math.max(0, ratio-1)), C = 2*Math.PI*40, pctLabel = Math.round(ratio*100), diff = got-goal;
+  const count = t => logs.filter(l=>l.type===t).length;
+  const foods = logs.filter(l=>l.type==="food"||l.type==="oral").slice().sort((a,b)=>a.ts-b.ts);
+  const ozToday = foods.filter(f=>f.unit==="oz").reduce((a,f)=>a+(Number(f.amount)||0),0);
+  const nonOz = foods.filter(f=>f.unit&&f.unit!=="oz"&&f.amount), otherUnits = nonOz.length?` + ${nonOz.map(f=>f.amount+" "+f.unit).join(", ")}`:"";
+  const water = logs.filter(l=>l.type==="flush").reduce((a,l)=>a+(Number(l.amount)||0),0), wgoal = Number(p.waterMl)||0;
+  const MIXES=mixOptions();
+  const form=(key,d)=>`<div class="stack" style="margin-top:12px">
+      <div class="grid2"><label for="amt">How much went in (mL)<input id="amt" type="number" inputmode="numeric" value="${esc(d.amount)}"></label>
+      <label for="ftime">Time<input id="ftime" type="time" value="${hhmm(d.ts||nowOnDay())}"></label></div>
+      <div><div class="eyebrow" style="margin-bottom:6px">What was in it</div><div class="chips" id="mix">
+        ${MIXES.map(m=>`<button class="chip" aria-pressed="${m===(d.mix||plan().defaultMix||MIXES[0])}" data-val="${m}">${m}</button>`).join("")}</div></div>
+      <div><div class="eyebrow" style="margin-bottom:6px">How did she do</div><div class="chips" id="how">
+        ${["Great","Okay","Rough"].map(h=>`<button class="chip" aria-pressed="${h===(d.how||"Great")}" data-val="${h}">${h}</button>`).join("")}</div></div>
+      <label for="fnote">Note (optional)<input id="fnote" value="${esc(d.note||"")}" placeholder="Gagging, paused pump, extra flush..."></label>
+      <button class="btn-primary" data-act="savefeed" data-key="${esc(key)}">Save feed</button></div>`;
+  const detail=f=>`${esc(f.amount)} mL at ${fmtTime(f.ts)}${f.mix?" · "+esc(f.mix):""}${f.how?" · "+esc(f.how):""}`;
+  const doneBtns=f=>S.open==="edit:"+f.id?`<button class="btn-ghost small" data-act="close">Close</button>`:`<div class="row" style="gap:6px;flex-wrap:nowrap"><button class="btn-ghost small" data-act="editfeed" data-id="${esc(f.id)}">Edit</button><button class="btn-ghost small" data-act="undo" data-id="${esc(f.id)}">Undo</button></div>`;
+  let feedCards = "";
+  for(let i=0;i<p.feedsPerDay;i++){
+    const f = feeds.find(l=>l.slot===i);
+    const label = (p.feedLabels||[])[i] || "Feed "+(i+1);
+    const open = S.open===i && !f;
+    feedCards += `<div class="card"><div class="feed ${f?"done":""}">
+      <div class="dot">${f?"✓":i+1}</div>
+      <div class="feed-body"><h3>${esc(label)}</h3>
+        <div class="small muted num">${f ? detail(f) : `${p.volumeMl} mL at ${p.rateMlHr} mL/hr, about ${feedMinutes(p)} min`}</div></div>
+      ${f ? doneBtns(f) : `<button class="${open?"btn-ghost":"btn-primary"}" data-act="openfeed" data-slot="${i}">${open?"Close":"Log"}</button>`}
+    </div>
+    ${open ? form("slot:"+i,{amount:p.volumeMl}) : f && S.open==="edit:"+f.id ? form("edit:"+f.id,f) : ""}
+    </div>`;
+  }
+  feeds.filter(f=>!(typeof f.slot==="number" && f.slot<p.feedsPerDay)).slice().reverse().forEach(f=>{
+    feedCards += `<div class="card"><div class="feed done"><div class="dot">+</div>
+      <div class="feed-body"><h3>Extra feed</h3><div class="small muted num">${detail(f)}</div></div>${doneBtns(f)}</div>
+      ${S.open==="edit:"+f.id ? form("edit:"+f.id,f) : ""}</div>`;
+  });
+  feedCards += S.open==="extra" ? `<div class="card"><div class="row" style="justify-content:space-between"><h3>Add a feed</h3><button class="btn-ghost small" data-act="close">Close</button></div>${form("extra",{amount:p.volumeMl})}</div>`
+    : `<button data-act="openextra" style="border-style:dashed">+ Add a feed (extra or adjusted)</button>`;
+  const items = logs.map(l=>`<div class="log"><div class="num muted">${fmtTime(l.ts)}</div>
+    <div>${esc(logLabel(l))}${l.note?`<div class="small muted">${esc(l.note)}</div>`:""}${l.by?`<div class="small muted">by ${esc(l.by)}</div>`:""}</div>
+    <button class="x" aria-label="Remove entry" data-act="undo" data-id="${esc(l.id)}">✕</button></div>`).join("");
+  const vk=viewKey(), vd=keyToDate(vk), isToday=vk===dayKey();
+  const strip=[6,5,4,3,2,1,0].map(n=>{ const d=addDays(keyToDate(dayKey()),-n), k=dayKey(d); const ml=S.logs.filter(l=>l.day===k&&l.type==="feed").reduce((a,l)=>a+(Number(l.amount)||0),0);
+    const r=goal?Math.round(ml/goal*100):0; return `<button class="dayc ${k===vk?"on":""}" role="listitem" data-act="goto" data-day="${k}" aria-label="${fmtDate(d)}, ${r} percent"><span>${d.toLocaleDateString([], {weekday:"narrow"})}</span><b class="num">${d.getDate()}</b><i class="num ${r>100?"over":r>=90?"ok":r>0?"mid":""}">${ml?r+"%":"·"}</i></button>`; }).join("");
+  return `
+  ${!S.plan&&S.loaded?`<div class="card stack welcome"><div class="eyebrow">Welcome to Oh Geez</div><h3>Start with the feeding plan</h3>
+    <p class="small" style="margin:0">Enter the feeds, water and daily care your team prescribed. Everything you enter stays on this phone. Nothing is sent to us.</p>
+    <div class="row"><button class="btn-primary" data-act="tabplan">Set up the plan</button></div></div>`:""}
+  <div class="daynav">
+    <button class="btn-ghost" data-act="day" data-delta="-1" aria-label="Previous day">‹</button>
+    <div style="text-align:center;min-width:0"><h2 style="margin:0">${isToday?"Today":fmtDate(vd)}</h2>${isToday?`<div class="small muted">${fmtDate(vd)}</div>`:`<button class="linkish small" data-act="today">Back to today</button>`}</div>
+    <button class="btn-ghost" data-act="day" data-delta="1" aria-label="Next day" ${isToday?"disabled":""}>›</button>
+  </div>
+  <div class="strip" role="list">${strip}</div>
+  ${isToday?"":`<div class="banner" style="margin-top:10px">You're viewing ${fmtDate(vd)}. Anything you log or edit here is saved to that day.</div>`}
+  ${isToday?countdownCard(true):""}
+  <div class="card hero">
+    <svg class="ring" viewBox="0 0 100 100" role="img" aria-label="${got} of ${goal} mL, ${pctLabel} percent of plan">
+      <circle cx="50" cy="50" r="40" fill="none" stroke="var(--line)" stroke-width="10"/>
+      <circle cx="50" cy="50" r="40" fill="none" stroke="var(--teal)" stroke-width="10" stroke-linecap="round"
+        stroke-dasharray="${C}" stroke-dashoffset="${C*(1-pct)}" transform="rotate(-90 50 50)"/>
+      ${over>0?`<circle cx="50" cy="50" r="40" fill="none" stroke="var(--sun)" stroke-width="10" stroke-linecap="round" stroke-dasharray="${C}" stroke-dashoffset="${C*(1-over)}" transform="rotate(-90 50 50)"/>`:""}
+      <text x="50" y="56" text-anchor="middle" font-family="Nunito,sans-serif" font-weight="900" font-size="${pctLabel>=100?18:20}" fill="var(--ink)">${pctLabel}%</text>
+    </svg>
+    <div><div class="eyebrow">Tube feeds</div><div class="big num">${got} <span class="muted" style="font-size:16px">/ ${goal} mL</span></div>
+      <div class="small num" style="font-weight:600;color:${diff>0?"var(--warn)":"var(--muted)"}">${!goal?"":diff===0?"Right on plan":diff>0?`+${diff} mL over plan (${pctLabel}%)`:`${-diff} mL left to plan`}</div>
+      <div class="small muted num">${feeds.length} of ${p.feedsPerDay} feeds · ${fmtOz(ozToday)} oz by mouth · ${count("vomit")} spit-ups</div>
+      ${wgoal?`<div class="small num" style="margin-top:6px"><b>Water:</b> ${water} / ${wgoal} mL (${Math.round(water/wgoal*100)}%)${water>=wgoal?" ✓":""}</div><div class="bar" style="margin-top:4px"><i style="width:${Math.min(100,water/wgoal*100)}%"></i></div>`:""}</div>
+  </div>
+  <h2>Feeds</h2><div class="stack">${feedCards}</div>
+  <h2>By mouth</h2>
+  <div class="card stack">
+    <div class="row" style="justify-content:space-between"><div><div class="eyebrow">${isToday?"Today":fmtDate(vd)}</div><div class="num" style="font-weight:600">${fmtOz(ozToday)} oz${foods.length?` across ${foods.length} ${foods.length>1?"tastes":"taste"}`:""}${otherUnits}</div></div>
+      ${S.open==="food"?`<button class="btn-ghost small" data-act="close">Close</button>`:`<button class="btn-primary" data-act="openfood">+ Add food</button>`}</div>
+    ${S.open==="food" ? foodForm("new",{amount:"",unit:"oz"}) : ""}
+    ${foods.map(f=>`<div><div class="row" style="justify-content:space-between;flex-wrap:nowrap"><div style="min-width:0"><div>${esc(f.food||"Oral practice")}${f.amount!==""&&f.amount!=null?` <span class="muted num">· ${esc(f.amount)} ${esc(f.unit||"")}</span>`:""}</div>
+      <div class="small muted num">${fmtTime(f.ts)}${f.how?" · "+esc(f.how):""}${f.note?" · "+esc(f.note):""}</div></div>
+      ${S.open==="foodedit:"+f.id?`<button class="btn-ghost small" data-act="close">Close</button>`:`<button class="btn-ghost small" data-act="editfood" data-id="${esc(f.id)}">Edit</button>`}</div>
+      ${S.open==="foodedit:"+f.id?foodForm("edit:"+f.id,f):""}</div>`).join("")}
+    ${!foods.length && S.open!=="food" ? `<p class="small muted" style="margin:0">Purées, puffs, yogurt melts or anything else she tries. Log the food and how much.</p>` : ""}
+  </div>
+  ${(p.careTasks||[]).length?`<h2>Daily care</h2><div class="card stack">${p.careTasks.map((t,i)=>{const r=careRule(t); const cs=logs.filter(l=>l.type==="care"&&l.task===i); const n=cs.length;
+    const met = r.min ? n>=r.min : false, full = r.max ? n>=r.max : false;
+    const sub = r.max ? `${n} of ${r.max} max today` : r.min ? `${n} today, at least ${r.min}` : `${n} today, as needed`;
+    const times = cs.slice().sort((a,b)=>a.ts-b.ts);
+    const edit = times.find(c=>S.open==="care:"+c.id);
+    return `<div><div class="feed ${met||full?"done":""}" style="grid-template-columns:44px 1fr auto"><div class="dot num">${n}</div><div class="feed-body"><div>${esc(r.name)}</div><div class="small muted num">${sub}${full?" · limit reached":""}</div></div>
+    <button class="btn-primary" data-act="care" data-task="${i}" ${full?"disabled":""}>+ Log</button></div>
+    ${times.length?`<div class="chips" style="margin:8px 0 0 56px">${times.map(c=>`<button class="chip num" aria-pressed="${S.open==="care:"+c.id}" data-act="editcare" data-id="${esc(c.id)}" aria-label="Edit time ${fmtTime(c.ts)}">${fmtTime(c.ts)}</button>`).join("")}</div>`:""}
+    ${edit?`<div class="row" style="margin:8px 0 0 56px;flex-wrap:nowrap"><input id="ctime" type="time" value="${hhmm(edit.ts)}" aria-label="Time" style="max-width:140px">
+      <button class="btn-primary small" data-act="savecare" data-id="${esc(edit.id)}">Save</button><button class="btn-ghost small" data-act="undo" data-id="${esc(edit.id)}">Remove</button></div>`:""}</div>`}).join("")}</div>`:""}
+  <h2>Quick log</h2>
+  <div class="quick">
+    <button data-act="openfood"><b>${foods.length}</b>Food by mouth</button>
+    <button data-act="quick" data-type="flush"><b>${count("flush")}</b>Water flush</button>
+    <button data-act="quick" data-type="vomit"><b>${count("vomit")}</b>Spit-up</button>
+    <button data-act="quick" data-type="wet"><b>${count("wet")}</b>Wet diaper</button>
+    <button data-act="quick" data-type="poop"><b>${count("poop")}</b>Dirty diaper</button>
+    <button data-act="quick" data-type="note"><b>+</b>Note</button>
+  </div>
+  <div id="quickform"></div>
+  <h2>${isToday?"Today's log":"Log for "+fmtDate(vd)}</h2>
+  <div class="card">${items || `<p class="muted small" style="margin:0">${isToday?"Nothing logged yet today.":"Nothing logged this day."} Tap Log on a feed or use the buttons above.</p>`}</div>`;
+}
+function logLabel(l){
+  return ({feed:`${typeof l.slot==="number"?"Tube feed "+(l.slot+1):"Extra feed"}: ${l.amount} mL${l.mix?", "+l.mix:""}${l.how?" ("+l.how+")":""}`, oral:`Oral practice${l.amount?": "+l.amount:""}`, open:`Opened a new ${l.what||"one"}`, food:`By mouth: ${l.food||"food"}${l.amount?" "+l.amount+" "+(l.unit||""):""}${l.how?" ("+l.how+")":""}`,
+    flush:`Water flush${l.amount?": "+l.amount+" mL":""}`, care:careRule((plan().careTasks||[])[l.task]||"Care").name, vomit:"Spit-up / vomit", wet:"Wet diaper", poop:"Dirty diaper", note:"Note"})[l.type] || l.type;
+}
+
+function viewSupplies(){
+  const ids = SUP_ORDER.filter(id=>S.supplies[id]).concat(Object.keys(S.supplies).filter(id=>!SUP_ORDER.includes(id)));
+  const addBtn = S.open==="addsup" ? addSupplyForm() : `<button data-act="openaddsup" style="border-style:dashed;width:100%;margin-top:10px">+ Add a supply</button>`;
+  if(!ids.length) return `<h2>Supplies</h2><div class="card"><p class="muted" style="margin:0">Add the things you keep stocked: feeding bags, extension sets, formula, syringes. Oh Geez counts them down and tells you when to reorder.</p></div>${addBtn}`;
+  const rows = ids.map(id=>{
+    const s=S.supplies[id], st=supplyState(s);
+    const width = isFinite(st.daysLeft) ? Math.min(100, st.daysLeft/30*100) : 100;
+    const label = s.needNow ? "Need more" : s.reused ? "Reused" : !isFinite(st.daysLeft) ? (s.track==="feeds"?"Not in use":"Usage not set") : st.status==="now" ? "Order now" : st.status==="soon" ? "Order soon" : "Stocked";
+    const editing = S.open==="sup:"+id;
+    return `<div class="card sup">
+      <div class="sup-top"><div style="min-width:0"><h3>${esc(s.name)}</h3><div class="small muted">${esc(s.detail||"")}</div></div><span class="pill ${st.status}">${label}</span></div>
+      <div class="bar ${st.status}"><i style="width:${width}%"></i></div>
+      <div class="row small num" style="justify-content:space-between">
+        <span><b>${Math.floor(st.est)}</b> ${esc(s.unit||"")} on hand</span>
+        <span class="muted">${s.needNow ? "On the next order" : s.reused ? "Washed and reused, no countdown" : s.track==="open"&&!st.rate ? "Tap Opened a new one each time you start one" : s.track==="feeds"&&!st.rate ? "Counts down as feeds with it are logged" : isFinite(st.daysLeft) ? `${Math.floor(st.daysLeft)} days left · reorder by ${fmtDate(st.reorderBy)}` : "Set daily use to forecast"}</span>
+      </div>
+      <div class="row">
+        <button class="small" data-act="recount" data-id="${id}">${editing?"Close":"Update count"}</button>
+        ${s.track==="open"?`<button class="small btn-primary" data-act="opened" data-id="${id}">Opened a new ${esc((s.unit||"one").replace(/s$/,""))}</button>`:""}
+        <button class="small" data-act="toggleneed" data-id="${id}">${s.needNow?"Got them":"Need more"}</button>
+        ${s.perOrder?`<button class="small" data-act="received" data-id="${id}">Order arrived (+${s.perOrder})</button>`:""}
+      </div>
+      ${editing?`<div class="grid2">
+        <label for="c-${id}">On hand now<input id="c-${id}" type="number" inputmode="decimal" value="${Math.floor(st.est)}"></label>
+        ${s.track==="feeds"?`<label for="u-${id}">mL of feed per ${esc((s.unit||"unit").replace(/s$/,""))}<input id="u-${id}" type="number" inputmode="numeric" value="${s.mlPerUnit??""}"></label>`
+          :`<label for="u-${id}">Used per day<input id="u-${id}" type="number" step="0.05" inputmode="decimal" value="${s.perDay??""}"></label>`}
+        <label for="o-${id}">Per order<input id="o-${id}" type="number" inputmode="numeric" value="${s.perOrder??""}"></label>
+        <div style="display:flex;align-items:flex-end"><button class="btn-primary" style="width:100%" data-act="savesup" data-id="${id}">Save</button></div>
+      </div><div class="row"><button class="btn-ghost small" data-act="delsup" data-id="${id}">${S.open==="del:"+id?"Tap again to remove":"Remove this supply"}</button></div>${s.track==="feeds"?`<p class="small muted" style="margin:0">Goes down only when a feed with ${esc(s.product)} is logged.${s.mlPerUnitIsGuess?" The mL per "+esc((s.unit||"unit").replace(/s$/,""))+" is an estimate from the label. Change it to match how you mix.":""}</p>`:s.perDayIsGuess?`<p class="small muted" style="margin:0">Daily use is a starting guess. Adjust it once you see how fast these go.</p>`:""}`:""}
+    </div>`;
+  }).join("");
+  const due = ids.filter(id=>supplyState(S.supplies[id]).status!=="ok");
+  return `<h2>Supplies</h2>
+  ${countdownCard(false)}
+  <div class="card stack" style="margin-top:10px">
+    <div><div class="eyebrow">Supplier</div><h3>${esc(cfg().supplierName||"Not set")}</h3>
+      <div class="small muted">${(S.orders||[])[0]?`Last order ${esc(new Date(S.orders[0].date+"T12:00").toLocaleDateString([], {month:"short",day:"numeric",year:"numeric"}))}${S.orders[0].number?" (#"+esc(S.orders[0].number)+")":""}.`:(cfg().supplierName?"No orders recorded yet.":"Add the supplier's name and phone in Plan, under About.")}</div></div>
+    ${due.length?`<div class="banner">Time to order: ${due.map(id=>esc(S.supplies[id].name)).join(", ")}</div>`:`<div class="small muted">Nothing needs ordering this week.</div>`}
+  </div>
+  <div class="stack" style="margin-top:10px">${rows}</div>
+  ${addBtn}
+  <p class="small muted">Formula and food counts go down only when you log a feed that uses them. Bags and extension sets go down a little each day. Tap Update count whenever you check the closet.</p>
+  <h2>Order history</h2>
+  ${S.open==="addorder"?addOrderForm():`<button data-act="openaddorder" style="border-style:dashed;width:100%;margin-bottom:10px">+ Add an order</button>`}
+  ${(S.orders||[]).length?`<div class="card">${S.orders.map(o=>`<details><summary class="num">${esc(new Date(o.date+"T12:00").toLocaleDateString([], {month:"short",day:"numeric",year:"numeric"}))} · #${esc(o.number)}${o.note?` <span class="muted small">· ${esc(o.note)}</span>`:""}</summary>
+    <ul class="small" style="margin:6px 0 0;padding-left:18px">${(o.items||[]).map(i=>`<li><span class="num">${esc(i.qty)}</span> ${esc(i.name)}${i.followed?` <span class="muted">(shipped separately)</span>`:""}</li>`).join("")}</ul></details>`).join("")}</div>`
+    :`<div class="card small muted">Past orders show here. Use + Add an order to keep packing slips on record.</div>`}`;
+}
+
+function weekSummary(){
+  const p=plan(), since=Date.now()-7*86400000, wk=S.logs.filter(l=>l.ts>=since);
+  const days = new Set(wk.map(l=>l.day)).size || 0;
+  const feeds = wk.filter(l=>l.type==="feed"), ml = feeds.reduce((a,l)=>a+(Number(l.amount)||0),0);
+  return { days, feeds:feeds.length, avg: days?Math.round(ml/days):0, goal:p.feedsPerDay*p.volumeMl,
+    rough: feeds.filter(f=>f.how==="Rough").length, vomit: wk.filter(l=>l.type==="vomit").length,
+    oral: wk.filter(l=>l.type==="oral"||l.type==="food").length, oz: Math.round(wk.filter(l=>(l.type==="food")&&l.unit==="oz").reduce((a,l)=>a+(Number(l.amount)||0),0)*100)/100, notes: wk.filter(l=>l.note).slice(0,6) };
+}
+function viewBrief(){
+  const b = {...DEFAULT_BRIEF, ...(S.brief||{})}, p = plan(), w = weekSummary();
+  const editing = S.open==="brief";
+  return `<h2>${esc(kidPoss())} Brief</h2>
+  <div class="card brief">
+    <section><div class="eyebrow">Patient</div>
+      ${editing?`<label for="bp">One per line, like "Care team: Children's Hospital"<textarea id="bp" rows="5">${esc((b.patient||[]).map(r=>r[0]+": "+r[1]).join("\n"))}</textarea></label>`
+        :(b.patient||[]).length?`<dl>${b.patient.map(r=>`<dt>${esc(r[0])}</dt><dd>${esc(r[1])}</dd>`).join("")}</dl>`:`<p class="small muted" style="margin:4px 0 0">Add name, tube type, care team and contacts with Edit below.</p>`}</section>
+    <section><div class="eyebrow">What to do next</div>
+      ${editing?`<label for="bq">One question per line<textarea id="bq" rows="4">${esc((b.next||[]).join("\n"))}</textarea></label>`:
+      `<ol>${(b.next||[]).map(q=>`<li>${esc(q)}</li>`).join("")}</ol>`}</section>
+    <section><div class="eyebrow">What we know</div>
+      ${editing?`<label for="bk">One fact per line<textarea id="bk" rows="5">${esc((b.known||[]).join("\n"))}</textarea></label>`:
+      `<ul>${(b.known||[]).map(q=>`<li>${esc(q)}</li>`).join("")}</ul>`}</section>
+    <section><div class="eyebrow">Current plan</div>
+      <ul><li>${p.feedsPerDay} tube feeds a day, ${p.volumeMl} mL each at ${p.rateMlHr} mL/hr (about ${feedMinutes(p)} min)</li>${p.waterMl?`<li>${p.waterMl} mL water a day in addition to feeds</li>`:""}
+      ${p.mixNote?`<li>${esc(p.mixNote)}</li>`:""}${p.oralDiet?`<li>${esc(p.oralDiet)}</li>`:""}${p.flushNote?`<li>Flushes: ${esc(p.flushNote)}</li>`:""}
+      ${(p.meds||[]).filter(Boolean).map(m=>`<li>${esc(m)}</li>`).join("")}${(p.careTasks||[]).map(m=>`<li>Daily: ${esc(m)}</li>`).join("")}</ul></section>
+    <section><div class="eyebrow">Last 7 days</div>
+      ${w.days?`<ul class="num"><li>Average ${w.avg} mL a day by tube (goal ${w.goal} mL) over ${w.days} logged day${w.days>1?"s":""}</li>
+        <li>${w.feeds} feeds logged, ${w.rough} marked rough</li><li>${w.vomit} spit-ups, ${w.oral} foods by mouth (${w.oz} oz total)</li>
+        ${w.notes.map(n=>`<li>${new Date(n.ts).toLocaleDateString([], {month:"short",day:"numeric"})}: ${esc(n.note)}</li>`).join("")}</ul>`
+        :`<p class="small muted" style="margin:4px 0 0">Fills in from the Today log. Log a few days before the next visit.</p>`}</section>
+    <section><div class="eyebrow">Plain-English terms</div>
+      ${(b.terms||[]).map(t=>`<details><summary>${esc(t[0])}</summary><p class="small" style="margin:6px 0 0">${esc(t[1])}</p></details>`).join("")}</section>
+  </div>
+  <div class="row" style="margin-top:10px">
+    <button class="btn-primary" data-act="copybrief">Copy brief for appointment</button>
+    <button data-act="${editing?"savebrief":"editbrief"}">${editing?"Save":"Edit brief"}</button>
+  </div>
+  <p class="guard" style="margin-top:14px">Oh Geez keeps things organized. Feed amounts, rates and thickness come from your care team, so check changes with them first.</p>`;
+}
+
+
+function addSupplyForm(){
+  return `<div class="card stack" style="margin-top:10px"><div class="row" style="justify-content:space-between"><h3>Add a supply</h3><button class="btn-ghost small" data-act="close">Close</button></div>
+    <label for="as-n">Name<input id="as-n" placeholder="e.g. Feeding bags, 500 mL"></label>
+    <label for="as-d">Details (optional)<input id="as-d" placeholder="Brand, size, item number"></label>
+    <div class="grid2"><label for="as-u">Counted in<input id="as-u" placeholder="bags, cans, pouches" value="items"></label>
+      <label for="as-c">On hand now<input id="as-c" type="number" inputmode="decimal" value="0"></label>
+      <label for="as-o">Usually comes per order<input id="as-o" type="number" inputmode="numeric" value=""></label>
+      <label for="as-t">How it gets used up<select id="as-t">
+        <option value="day">A set amount each day</option><option value="feeds">From logged feeds (formula)</option>
+        <option value="open">When we open a new one</option><option value="reused">Washed and reused</option></select></label></div>
+    <div class="grid2" id="as-extra"><label for="as-r">Used per day<input id="as-r" type="number" step="0.01" inputmode="decimal" placeholder="1 a day = 1, every 2 weeks = 0.07"></label>
+      <label for="as-p">For formula: name used when logging<input id="as-p" placeholder="Must match a feed option"></label>
+      <label for="as-m">For formula: mL of feed per item<input id="as-m" type="number" inputmode="numeric"></label></div>
+    <button class="btn-primary" data-act="saveaddsup">Add supply</button></div>`;
+}
+function addOrderForm(){
+  return `<div class="card stack"><div class="row" style="justify-content:space-between"><h3>Add an order</h3><button class="btn-ghost small" data-act="close">Close</button></div>
+    <div class="grid2"><label for="ao-d">Order date<input id="ao-d" type="date" value="${dayKey()}"></label><label for="ao-n">Order number (optional)<input id="ao-n"></label></div>
+    <label for="ao-x">Note (optional)<input id="ao-x" placeholder="Supplier, or anything worth remembering"></label>
+    <label for="ao-i">Items, one per line, quantity first<textarea id="ao-i" rows="4" placeholder="30 Feeding bags, 500 mL&#10;4 Extension sets"></textarea></label>
+    <button class="btn-primary" data-act="saveaddorder">Save order</button></div>`;
+}
+function exportData(){
+  const data={ app:"oh-geez", format:1, exported:new Date().toISOString(), docs:LocalDB.all() };
+  const blob=new Blob([JSON.stringify(data,null,1)],{type:"application/json"});
+  const a=document.createElement("a"); a.href=URL.createObjectURL(blob); a.download=`oh-geez-backup-${dayKey()}.json`; document.body.appendChild(a); a.click(); setTimeout(()=>{ URL.revokeObjectURL(a.href); a.remove(); },1000);
+  try{ localStorage.setItem("ohgeez:lastBackup", new Date().toISOString()); }catch(e){}
+  toast("Backup saved to your files");
+}
+function importData(file){
+  const r=new FileReader();
+  r.onload=()=>{ try{ const d=JSON.parse(r.result); if(d.app!=="oh-geez"||!d.docs) throw 0; S.pendingImport=d; S.open="confirmimport"; render(); }catch(e){ toast("That file isn't an Oh Geez backup"); } };
+  r.readAsText(file);
+}
+function viewData(){
+  let last=""; try{ last=localStorage.getItem("ohgeez:lastBackup")||""; }catch(e){}
+  const n=Object.keys(LocalDB.all()).length;
+  return `<h2>Your data</h2>
+  <div class="card stack">
+    <p class="small" style="margin:0"><b>Everything is saved only on this device.</b> Oh Geez has no accounts and no server, so nobody else can see it, including us. That also means we can't recover it if this phone is lost, so save a backup now and then.</p>
+    <p class="small muted" style="margin:0">${n} saved items. ${last?`Last backup ${fmtDate(new Date(last))}.`:"No backup yet."}</p>
+    <div class="row"><button class="btn-primary" data-act="export">Save a backup file</button>
+      <label class="btnlike" for="importfile">Load a backup<input id="importfile" type="file" accept="application/json,.json" hidden></label></div>
+    ${S.open==="confirmimport"?`<div class="banner">Loading this backup replaces everything on this phone with what's in the file (${Object.keys(S.pendingImport.docs).length} items). <div class="row" style="margin-top:8px"><button class="btn-primary small" data-act="doimport">Replace with backup</button><button class="btn-ghost small" data-act="close">Cancel</button></div></div>`:""}
+    <p class="small muted" style="margin:0">To share with a partner, send them your backup file and have them load it. Each phone keeps its own copy.</p>
+    <button class="btn-ghost small" data-act="erase" style="align-self:flex-start">${S.open==="erase"?"Tap again to erase everything on this phone":"Erase all data"}</button>
+  </div>`;
+}
+function viewPlan(){
+  const p = plan();
+  const labels = p.feedLabels || [];
+  const c = cfg();
+  return `<h2>About</h2>
+  <div class="card stack">
+    <div class="grid2">
+      <label for="s-k">Child's first name<input id="s-k" value="${esc(c.childName||"")}" placeholder="Shows on the brief"></label>
+      <label for="s-me">Your name<input id="s-me" value="${esc(c.caregiverName||"")}" placeholder="Shows next to what you log"></label>
+      <label for="s-sn">Supply company<input id="s-sn" value="${esc(c.supplierName||"")}" placeholder="Your DME or home health supplier"></label>
+      <label for="s-sp">Supplier phone<input id="s-sp" type="tel" value="${esc(c.supplierPhone||"")}"></label>
+      <label for="s-ld">Order this many days early<input id="s-ld" type="number" inputmode="numeric" value="${leadDays()}"></label>
+    </div>
+    <button class="btn-primary" data-act="savesettings">Save</button>
+  </div>
+  <h2>Feeding plan</h2>
+  <p class="guard">Enter what your child's dietitian and speech therapist prescribed. Update this only when they change the plan.</p>
+  <div class="card stack" style="margin-top:12px">
+    <div class="grid2">
+      <label for="p-n">Feeds per day<input id="p-n" type="number" inputmode="numeric" value="${p.feedsPerDay}"></label>
+      <label for="p-v">mL per feed<input id="p-v" type="number" inputmode="numeric" value="${p.volumeMl}"></label>
+      <label for="p-r">Pump rate (mL/hr)<input id="p-r" type="number" inputmode="numeric" value="${p.rateMlHr}"></label>
+      <label for="p-w">Water per day (mL)<input id="p-w" type="number" inputmode="numeric" value="${p.waterMl??""}"></label>
+      <label for="p-l">Feed names (comma separated)<input id="p-l" value="${esc(labels.join(", "))}"></label>
+    </div>
+    <label for="p-m">Formula and mixing<textarea id="p-m">${esc(p.mixNote||"")}</textarea></label>
+    <label for="p-o">By mouth<textarea id="p-o">${esc(p.oralDiet||"")}</textarea></label>
+    <label for="p-f">Flush notes<input id="p-f" value="${esc(p.flushNote||"")}"></label>
+    <label for="p-x">Meds and vitamins (one per line)<textarea id="p-x">${esc((p.meds||[]).join("\n"))}</textarea></label>
+    <label for="p-c">Daily care, one per line. Add (max 3), (at least 1) or (as needed)<textarea id="p-c">${esc((p.careTasks||[]).join("\n"))}</textarea></label>
+    <label for="p-mx">Formula options when logging a feed (comma separated)<input id="p-mx" value="${esc((p.mixOptions||[]).join(", "))}" placeholder="e.g. Formula A only, Formula A + Formula B"></label>
+    <label for="p-dm">Usual feed (picked by default)<input id="p-dm" value="${esc(p.defaultMix||"")}" placeholder="One of the options above"></label>
+    <label for="p-d">Equipment<input id="p-d" value="${esc(p.equipment||"")}"></label>
+    <button class="btn-primary" data-act="saveplan">Save plan</button>
+  </div>
+  <p class="small muted num">Each feed takes about ${feedMinutes(p)} minutes on the pump. Daily tube goal: ${p.feedsPerDay*p.volumeMl} mL of feeds plus ${p.waterMl||0} mL water.</p>
+  ${viewData()}`;
+}
+
+/* ---------- actions ---------- */
+function copy(text){
+  const fallback=()=>{ const ta=document.createElement("textarea"); ta.value=text; document.body.appendChild(ta); ta.select(); toast("Selected. Press copy."); setTimeout(()=>ta.remove(),4000); };
+  try{ navigator.clipboard.writeText(text).then(()=>toast("Copied"), fallback); }catch(e){ fallback(); }
+}
+function briefText(){
+  const b={...DEFAULT_BRIEF, ...(S.brief||{})}, p=plan(), w=weekSummary();
+  const L=[`${kidPoss().toUpperCase()} BRIEF (${fmtDate(new Date())})`,"",...(b.patient||[]).map(r=>`${r[0]}: ${r[1]}`),"","WHAT TO DO NEXT",...(b.next||[]).map((q,i)=>`${i+1}. ${q}`),
+    "","WHAT WE KNOW",...(b.known||[]).map(k=>"- "+k),"","CURRENT PLAN",`- ${p.feedsPerDay} feeds a day, ${p.volumeMl} mL at ${p.rateMlHr} mL/hr`];
+  if(p.waterMl) L.push(`- ${p.waterMl} mL water a day in addition to feeds`);
+  if(p.mixNote) L.push("- "+p.mixNote); if(p.oralDiet) L.push("- "+p.oralDiet); if(p.flushNote) L.push("- Flushes: "+p.flushNote);
+  (p.meds||[]).filter(Boolean).forEach(m=>L.push("- "+m)); (p.careTasks||[]).forEach(m=>L.push("- Daily: "+m));
+  L.push("","LAST 7 DAYS");
+  if(w.days){ L.push(`- Average ${w.avg} mL/day by tube (goal ${w.goal}) over ${w.days} days`,`- ${w.feeds} feeds, ${w.rough} rough`,`- ${w.vomit} spit-ups, ${w.oral} foods by mouth (${w.oz} oz total)`);
+    w.notes.forEach(n=>L.push(`- ${new Date(n.ts).toLocaleDateString([], {month:"short",day:"numeric"})}: ${n.note}`)); } else L.push("- No logs yet");
+  return L.join("\n");
+}
+function orderText(){
+  const due=Object.keys(S.supplies).filter(id=>supplyState(S.supplies[id]).status!=="ok");
+  const list=(due.length?due:Object.keys(S.supplies)).map(id=>{const s=S.supplies[id];return `- ${s.name}${s.perOrder?`: ${s.perOrder} ${s.unit}`:""} (about ${Math.floor(supplyState(s).est)} on hand)`;});
+  return `${sup().name} reorder${kid()?" for "+kid():""}\n${list.join("\n")}`;
+}
+
+document.addEventListener("click", async e=>{
+  const tab=e.target.closest("nav button"); if(tab){ S.tab=tab.dataset.tab; S.open=null; render(); window.scrollTo(0,0); return; }
+  const chip=e.target.closest(".chips .chip[data-val]"); if(chip){ chip.parentElement.querySelectorAll(".chip").forEach(c=>c.setAttribute("aria-pressed", c===chip)); return; }
+  const b=e.target.closest("[data-act]"); if(!b) return;
+  const a=b.dataset.act, id=b.dataset.id;
+  if(a==="openfeed"){ const s=+b.dataset.slot; S.open = S.open===s?null:s; render(); }
+  if(a==="day"){ const d=addDays(keyToDate(viewKey()), +b.dataset.delta), k=dayKey(d); if(k>dayKey()) return; S.viewDay = k===dayKey()?null:k; S.open=null; render(); }
+  if(a==="goto"){ const k=b.dataset.day; S.viewDay = k===dayKey()?null:k; S.open=null; render(); }
+  if(a==="today"){ S.viewDay=null; S.open=null; render(); }
+  if(a==="opened"){ const cur=S.supplies[id]; if(!(Number(cur.counted)>0)){ toast("Count is already 0. Update the count first."); return; }
+    const s2={...cur, counted:Number(cur.counted)-1}; delete s2.id; await saveDoc("supplies/"+id, s2, `${s2.counted} ${cur.unit||""} left`); await addLog({type:"open", supply:id, what:cur.name}); return; }
+  if(a==="toggleneed"){ const s={...S.supplies[id], needNow:!S.supplies[id].needNow}; await saveDoc("supplies/"+id, s, s.needNow?"Added to next order":"Marked as stocked"); }
+  if(a==="tabplan"){ S.tab="plan"; S.open=null; render(); window.scrollTo(0,0); return; }
+  if(a==="savesettings"){ await saveDoc("app/settings", {...cfg(), childName:$("#s-k").value.trim(), caregiverName:$("#s-me").value.trim(), supplierName:$("#s-sn").value.trim(), supplierPhone:$("#s-sp").value.trim(), leadDays:Math.max(0,Number($("#s-ld").value)||0)}, "Saved"); return; }
+  if(a==="openaddsup"){ S.open="addsup"; render(); return; }
+  if(a==="saveaddsup"){ const name=$("#as-n").value.trim(); if(!name){ toast("Give the supply a name"); return; }
+    const t=$("#as-t").value, d={ name, detail:$("#as-d").value.trim(), unit:$("#as-u").value.trim()||"items", counted:Number($("#as-c").value)||0, countedAt:new Date().toISOString(), perOrder:Number($("#as-o").value)||0, perDay:0 };
+    if(t==="day") d.perDay=Number($("#as-r").value)||0;
+    if(t==="feeds"){ d.track="feeds"; d.product=$("#as-p").value.trim()||name; d.mlPerUnit=Number($("#as-m").value)||0; }
+    if(t==="open") d.track="open";
+    if(t==="reused") d.reused=true;
+    let sid=name.toLowerCase().replace(/[^a-z0-9]+/g,"-").replace(/^-|-$/g,"").slice(0,40)||"item"; while(S.supplies[sid]) sid+="-2";
+    S.open=null; await saveDoc("supplies/"+sid, d, "Supply added"); return; }
+  if(a==="delsup"){ if(S.open!=="del:"+id){ S.open="del:"+id; render(); return; } S.open=null; await S.db.doc("supplies/"+id).delete(); toast("Removed"); return; }
+  if(a==="openaddorder"){ S.open="addorder"; render(); return; }
+  if(a==="saveaddorder"){ const items=$("#ao-i").value.split("\n").map(l=>l.trim()).filter(Boolean).map(l=>{ const m=/^(\d+(?:\.\d+)?)\s*x?\s+(.*)$/i.exec(l); return m?{qty:Number(m[1]), name:m[2]}:{qty:"", name:l}; });
+    const d={ date:$("#ao-d").value||dayKey(), number:$("#ao-n").value.trim(), note:$("#ao-x").value.trim(), items };
+    S.open=null; await saveDoc("orders/"+(d.number||("o"+Date.now().toString(36))), d, "Order saved"); return; }
+  if(a==="export"){ exportData(); return; }
+  if(a==="doimport"){ LocalDB.replaceAll(S.pendingImport.docs); S.pendingImport=null; S.open=null; S.viewDay=null; toast("Backup loaded"); return; }
+  if(a==="erase"){ if(S.open!=="erase"){ S.open="erase"; render(); return; } LocalDB.replaceAll({}); S.open=null; S.tab="today"; toast("Everything was erased"); return; }
+  if(a==="gotosupplies"){ S.tab="supplies"; S.open=null; render(); window.scrollTo(0,0); return; }
+  if(a==="openextra"){ S.open="extra"; render(); }
+  if(a==="openfood"){ S.open="food"; S.tab="today"; render(); setTimeout(()=>{ const f=$("#fname"); if(f){ f.scrollIntoView({block:"center"}); f.focus(); } },0); }
+  if(a==="editfood"){ S.open="foodedit:"+id; render(); }
+  if(a==="savefood"){ const v=sel=>document.querySelector(sel+' .chip[aria-pressed="true"]')?.dataset.val||""; const key=b.dataset.key;
+    const food=$("#fname").value.trim(); if(!food){ toast("Add what she ate"); $("#fname").focus(); return; }
+    const raw=$("#famt").value.trim(), base=key.startsWith("edit:")?(S.logs.find(l=>l.id===key.slice(5))?.ts||Date.now()):nowOnDay();
+    const fields={type:"food", food, amount: raw===""?"":Number(raw), unit:v("#funit")||"oz", how:v("#fhow"), note:$("#fnote2").value.trim(), ts:tsFrom(base,$("#ftime2").value)}; S.open=null;
+    if(key.startsWith("edit:")) await updateLog(key.slice(5), fields); else await addLog(fields); }
+  if(a==="editfeed"){ S.open="edit:"+id; render(); }
+  if(a==="close"){ S.open=null; render(); }
+  if(a==="savefeed"){ const v=sel=>document.querySelector(sel+' .chip[aria-pressed="true"]')?.dataset.val||"";
+    const key=b.dataset.key, base=key.startsWith("edit:") ? (S.logs.find(l=>l.id===key.slice(5))?.ts||Date.now()) : nowOnDay();
+    const fields={amount:Number($("#amt").value)||0, mix:v("#mix"), how:v("#how"), note:$("#fnote").value.trim(), ts:tsFrom(base,$("#ftime").value)}; S.open=null;
+    if(key.startsWith("edit:")) await updateLog(key.slice(5), fields);
+    else await addLog({type:"feed", slot: key.startsWith("slot:") ? +key.slice(5) : null, ...fields}); }
+  if(a==="undo"){ if(S.open==="care:"+id||S.open==="foodedit:"+id) S.open=null; delLog(id); }
+  if(a==="editcare"){ S.open = S.open==="care:"+id ? null : "care:"+id; render(); }
+  if(a==="savecare"){ const l=S.logs.find(x=>x.id===id); S.open=null; await updateLog(id,{ts:tsFrom(l?.ts||Date.now(), $("#ctime").value)}); }
+  if(a==="care"){ const t=+b.dataset.task, r=careRule((plan().careTasks||[])[t]||""); const n=todayLogs().filter(l=>l.type==="care"&&l.task===t).length;
+    if(r.max && n>=r.max){ toast(`Limit is ${r.max} a day`); return; } await addLog({type:"care", task:t, ts:nowOnDay()}); }
+  if(a==="quick"){ const t=b.dataset.type;
+    if(t==="wet"||t==="poop"){ return addLog({type:t}); }
+    const ph={oral:"What and how much, e.g. 2 tsp Level 4 purée",flush:"mL of water, e.g. 60",vomit:"After which feed? How much?",note:"Anything worth telling the team"}[t];
+    $("#quickform").innerHTML=`<div class="card stack" style="margin-top:10px"><label for="qv">${esc(logLabel({type:t}))}<input id="qv" placeholder="${esc(ph)}" ${t==="flush"?'type="number" inputmode="numeric"':""}></label>
+      <label for="qtime">Time<input id="qtime" type="time" value="${hhmm(nowOnDay())}"></label>
+      <div class="row"><button class="btn-primary" data-act="qsave" data-type="${t}">Save</button><button class="btn-ghost" data-act="qcancel">Cancel</button></div></div>`;
+    $("#qv").focus(); }
+  if(a==="qsave"){ const t=b.dataset.type, v=$("#qv").value.trim();
+    const entry = t==="flush" ? {type:t, amount:Number(v)||0} : t==="note" ? {type:t, note:v} : t==="oral" ? {type:t, amount:v} : {type:t, note:v};
+    entry.ts=tsFrom(nowOnDay(), $("#qtime").value); $("#quickform").innerHTML=""; await addLog(entry); }
+  if(a==="qcancel") $("#quickform").innerHTML="";
+  if(a==="recount"){ S.open = S.open==="sup:"+id?null:"sup:"+id; render(); }
+  if(a==="savesup"){ const s={...S.supplies[id]}; s.counted=Number($("#c-"+id).value)||0; if(s.track==="feeds"){ s.mlPerUnit=Number($("#u-"+id).value)||0; s.mlPerUnitIsGuess=false; } else s.perDay=Number($("#u-"+id).value)||0; s.perOrder=Number($("#o-"+id).value)||0; s.countedAt=new Date().toISOString(); s.perDayIsGuess=false; if(s.counted>0) s.needNow=false;
+    S.open=null; await saveDoc("supplies/"+id, s, "Saved"); }
+  if(a==="received"){ const s={...S.supplies[id]}; const st=supplyState(s); s.counted=Math.floor(st.est)+(Number(s.perOrder)||0); s.countedAt=new Date().toISOString(); s.lastReceived=dayKey();
+    await saveDoc("supplies/"+id, s, `Added ${s.perOrder} ${s.unit}`); }
+  if(a==="copy") copy(b.dataset.text);
+  if(a==="copyorder") copy(orderText());
+  if(a==="copybrief") copy(briefText());
+  if(a==="editbrief"){ S.open="brief"; render(); }
+  if(a==="savebrief"){ const nb={...DEFAULT_BRIEF, ...(S.brief||{}), patient:$("#bp").value.split("\n").map(l=>{ const i=l.indexOf(":"); return i>0?[l.slice(0,i).trim(), l.slice(i+1).trim()]:[l.trim(),""]; }).filter(r=>r[0]), next:$("#bq").value.split("\n").map(s=>s.trim()).filter(Boolean), known:$("#bk").value.split("\n").map(s=>s.trim()).filter(Boolean)};
+    S.open=null; await saveDoc("app/brief", nb, "Brief saved"); }
+  if(a==="saveplan"){ const np={...plan(), feedsPerDay:Math.max(1,Number($("#p-n").value)||1), volumeMl:Number($("#p-v").value)||0, rateMlHr:Number($("#p-r").value)||0, waterMl:Number($("#p-w").value)||0,
+      feedLabels:$("#p-l").value.split(",").map(s=>s.trim()).filter(Boolean), mixNote:$("#p-m").value.trim(), oralDiet:$("#p-o").value.trim(),
+      flushNote:$("#p-f").value.trim(), meds:$("#p-x").value.split("\n").map(s=>s.trim()).filter(Boolean), equipment:$("#p-d").value.trim(), mixOptions:$("#p-mx").value.split(",").map(x=>x.trim()).filter(Boolean), defaultMix:$("#p-dm").value.trim(), careTasks:$("#p-c").value.split("\n").map(s=>s.trim()).filter(Boolean), updated:dayKey()};
+    await saveDoc("app/plan", np, "Plan saved"); }
+});
+document.addEventListener("change", e=>{ if(e.target && e.target.id==="importfile" && e.target.files[0]){ importData(e.target.files[0]); e.target.value=""; } });
+boot();
+</script>
+</body>
+</html>
