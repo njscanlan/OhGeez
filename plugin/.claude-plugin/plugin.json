@@ -3,9 +3,20 @@
   "displayName": "Oh Geez",
   "version": "1.0.0",
   "description": "Appointment companion for parents of tube-fed kids: plain-English briefs before SLP, OT, PT, dietitian, GI and other visits, decoded reports and home programs, all in one Care File.",
-  "author": { "name": "Nick Scanlan", "url": "https://github.com/njscanlan" },
+  "author": {
+    "name": "Nick Scanlan",
+    "url": "https://github.com/njscanlan"
+  },
   "homepage": "https://oh-geez.netlify.app",
   "repository": "https://github.com/njscanlan/OhGeez",
   "license": "MIT",
-  "keywords": ["feeding tube", "g-tube", "caregiver", "speech therapy", "pediatrics", "appointments"]
+  "keywords": [
+    "feeding tube",
+    "g-tube",
+    "caregiver",
+    "speech therapy",
+    "pediatrics",
+    "appointments"
+  ],
+  "privacyPolicyUrl": "https://oh-geez.netlify.app/privacy.html"
 }

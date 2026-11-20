@@ -40,6 +40,8 @@ In Claude Code:
 /plugin install oh-geez --marketplace njscanlan/OhGeez
 ```
 
+Read the full [Privacy policy](https://oh-geez.netlify.app/privacy.html).
+
 ## Not medical advice
 
 Oh Geez organizes what your care team prescribes. It never calculates or changes feed amounts, rates or textures. Always check changes with your child's care team.

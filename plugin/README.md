@@ -35,6 +35,10 @@ On claude.ai, you can also save the skill on its own: download `skills/oh-geez/S
 
 Say something like "Help me get ready for my daughter's SLP visit on Tuesday" or "Here's the swallow study report, what does it mean?" and attach any notes or photos.
 
+## Privacy
+
+Read the [Privacy policy](https://oh-geez.netlify.app/privacy.html).
+
 ## License
 
 MIT

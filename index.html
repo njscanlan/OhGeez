@@ -591,6 +591,7 @@ function viewData(){
       <label class="btnlike" for="importfile">Load a backup<input id="importfile" type="file" accept="application/json,.json" hidden></label></div>
     ${S.open==="confirmimport"?`<div class="banner">Loading this backup replaces everything on this phone with what's in the file (${Object.keys(S.pendingImport.docs).length} items). <div class="row" style="margin-top:8px"><button class="btn-primary small" data-act="doimport">Replace with backup</button><button class="btn-ghost small" data-act="close">Cancel</button></div></div>`:""}
     <p class="small muted" style="margin:0">To share with a partner, send them your backup file and have them load it. Each phone keeps its own copy.</p>
+    <p class="small muted" style="margin:0"><a href="privacy.html" style="color:var(--teal)">Privacy policy</a> · <a href="https://github.com/njscanlan/OhGeez" style="color:var(--teal)">Source code</a></p>
     <button class="btn-ghost small" data-act="erase" style="align-self:flex-start">${S.open==="erase"?"Tap again to erase everything on this phone":"Erase all data"}</button>
   </div>`;
 }
